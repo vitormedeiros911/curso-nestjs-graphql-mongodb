@@ -25,11 +25,13 @@ export class PostService {
   }
 
   async verPost(id: string) {
-    const post = this.postRepository.findOne({
+    const post = await this.postRepository.findOne({
       where: {
         id,
       },
     });
+
+    console.log(post);
 
     if (!post) throw new NotFoundException('Post não encontrado');
 
@@ -39,22 +41,84 @@ export class PostService {
   async editarPost(id: string, createPostInput: CreatePostInput) {
     const post = await this.verPost(id);
 
-    if (!post) throw new NotFoundException('Post não encontrado');
-
     Object.assign(post, createPostInput);
 
     return this.postRepository.save(post);
   }
 
   async excluirPost(id: string) {
-    const post = await this.verPost(id);
-
-    if (!post) throw new NotFoundException('Post não encontrado');
+    await this.verPost(id);
 
     await this.postRepository.delete({
       id,
     });
 
     return 'Post excluído com sucesso';
+  }
+
+  async adicionarComentario(id: string, comentario: string) {
+    const post = await this.verPost(id);
+
+    if (post.comentarios)
+      post.comentarios.push({
+        id: uuid(),
+        texto: comentario,
+        likes: 0,
+      });
+    else post.comentarios = [{ id: uuid(), texto: comentario, likes: 0 }];
+
+    return this.postRepository.save(post);
+  }
+
+  async excluirComentario(id: string, idComentario: string) {
+    const post = await this.verPost(id);
+
+    const comentario = post.comentarios.find((c) => c.id === idComentario);
+
+    if (!comentario) throw new NotFoundException('Comentário não encontrado');
+
+    post.comentarios = post.comentarios.filter((c) => c.id !== idComentario);
+
+    return this.postRepository.save(post);
+  }
+
+  async darLike(id: string) {
+    const post = await this.verPost(id);
+
+    post.likes++;
+
+    return this.postRepository.save(post);
+  }
+
+  async removerLike(id: string) {
+    const post = await this.verPost(id);
+
+    post.likes--;
+
+    return this.postRepository.save(post);
+  }
+
+  async darLikeComentario(id: string, idComentario: string) {
+    const post = await this.verPost(id);
+
+    const comentario = post.comentarios.find((c) => c.id === idComentario);
+
+    if (!comentario) throw new NotFoundException('Comentário não encontrado');
+
+    comentario.likes++;
+
+    return this.postRepository.save(post);
+  }
+
+  async removerLikeComentario(id: string, idComentario: string) {
+    const post = await this.verPost(id);
+
+    const comentario = post.comentarios.find((c) => c.id === idComentario);
+
+    if (!comentario) throw new NotFoundException('Comentário não encontrado');
+
+    comentario.likes--;
+
+    return this.postRepository.save(post);
   }
 }
