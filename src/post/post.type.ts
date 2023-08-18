@@ -6,11 +6,8 @@ export class PostType {
   id: string;
 
   @Field()
-  titulo: string;
-
-  @Field()
   descricao: string;
 
   @Field()
-  url_imagem: string;
+  urlImagem: string;
 }

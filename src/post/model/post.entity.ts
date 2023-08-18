@@ -1,15 +1,16 @@
-import { ObjectIdColumn, Column } from 'typeorm';
+import { ObjectIdColumn, Column, Entity, PrimaryColumn } from 'typeorm';
 
+@Entity()
 export class Post {
   @ObjectIdColumn()
   _id: string;
 
-  @Column()
-  titulo: string;
+  @PrimaryColumn()
+  id: string;
 
   @Column()
   descricao: string;
 
   @Column()
-  url_imagem: string;
+  urlImagem: string;
 }
