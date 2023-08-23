@@ -14,8 +14,6 @@ export class SignUpInput extends PickType(AuthInput, [
   @IsDefined()
   nome: string;
 
-  @IsUrl()
-  @IsNotEmpty()
   @Field({ nullable: true })
   urlFotoPerfil?: string;
 }

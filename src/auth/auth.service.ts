@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
@@ -22,7 +26,7 @@ export class AuthService {
     });
 
     if (user) {
-      throw new UnauthorizedException();
+      throw new BadRequestException('Email já cadastrado');
     }
 
     user = new this.userModel({
