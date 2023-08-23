@@ -1,5 +1,5 @@
 import { Field, InputType, PickType } from '@nestjs/graphql';
-import { IsDefined, IsNotEmpty, IsString } from 'class-validator';
+import { IsDefined, IsNotEmpty, IsString, IsUrl } from 'class-validator';
 
 import { AuthInput } from './auth.input';
 
@@ -13,4 +13,9 @@ export class SignUpInput extends PickType(AuthInput, [
   @IsNotEmpty()
   @IsDefined()
   nome: string;
+
+  @IsUrl()
+  @IsNotEmpty()
+  @Field({ nullable: true })
+  urlFotoPerfil?: string;
 }

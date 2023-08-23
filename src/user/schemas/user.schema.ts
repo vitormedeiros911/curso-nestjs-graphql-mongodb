@@ -16,6 +16,13 @@ export class User {
   @Field()
   email: string;
 
+  @Prop({
+    default:
+      'https://www.pngkey.com/png/full/349-3499617_person-placeholder-person-placeholder.png',
+  })
+  @Field()
+  urlFotoPerfil: string;
+
   @Prop()
   @HideField()
   senha: string;

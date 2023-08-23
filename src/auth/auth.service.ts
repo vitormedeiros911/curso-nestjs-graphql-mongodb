@@ -35,6 +35,9 @@ export class AuthService {
 
     user.senha = await bcrypt.hash(signUpInput.senha, salt);
 
+    if (signUpInput.urlFotoPerfil)
+      user.urlFotoPerfil = signUpInput.urlFotoPerfil;
+
     await user.save();
 
     return 'Usuário cadastrado com sucesso!';
