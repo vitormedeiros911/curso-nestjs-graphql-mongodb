@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Post } from './model/post.entity';
 import { PostResolver } from './post.resolver';
 import { PostService } from './post.service';
-import { PostRepository } from './model/post.repository';
+import { MongooseModule } from '@nestjs/mongoose';
+import { PostSchema } from './schema/post.schema';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post])],
-  providers: [PostResolver, PostService, PostRepository],
+  imports: [MongooseModule.forFeature([{ name: 'Post', schema: PostSchema }])],
+  providers: [PostResolver, PostService],
+  exports: [MongooseModule],
 })
 export class PostModule {}

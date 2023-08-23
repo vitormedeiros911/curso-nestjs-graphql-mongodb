@@ -1,10 +1,11 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { MinLength, IsUrl, IsArray } from 'class-validator';
-import { Comentario } from 'src/post/model/comentario.entity';
+import { IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 
 @InputType()
 export class CreatePostInput {
   @MinLength(3)
+  @MaxLength(500)
+  @IsString()
   @Field()
   descricao: string;
 

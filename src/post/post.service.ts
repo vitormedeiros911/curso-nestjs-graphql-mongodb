@@ -1,124 +1,112 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User } from 'src/user/schemas/user.schema';
 import { v4 as uuid } from 'uuid';
 
 import { CreatePostInput } from './input/create-post.input';
-import { PostRepository } from './model/post.repository';
+import { Post } from './schema/post.schema';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly postRepository: PostRepository) {}
+  constructor(@InjectModel('Post') private readonly postModel: Model<Post>) {}
 
-  async criarPost(createPostInput: CreatePostInput) {
+  async criarPost(createPostInput: CreatePostInput, user: User) {
     const { descricao, urlImagem } = createPostInput;
 
-    const post = this.postRepository.create({
+    const post = new this.postModel({
       id: uuid(),
       descricao,
       urlImagem,
+      likes: 0,
+      usuario: user,
     });
 
-    return this.postRepository.save(post);
+    return post.save();
   }
 
   async listarPosts() {
-    return this.postRepository.find();
+    const posts = await this.postModel
+      .find()
+      .populate(['usuario', 'comentarios'])
+      .exec();
+
+    if (!posts) throw new NotFoundException('Nenhum post encontrado');
+
+    return posts;
   }
 
-  async verPost(id: string) {
-    const post = await this.postRepository.findOne({
-      where: {
-        id,
-      },
-    });
-
-    console.log(post);
+  async visualizarPost(id: string) {
+    const post = await this.postModel
+      .findOne({ id })
+      .populate([
+        {
+          path: 'usuario',
+          model: 'User',
+        },
+        {
+          path: 'comentarios',
+          model: 'Comentario',
+          populate: {
+            path: 'usuario',
+            model: 'User',
+          },
+        },
+      ])
+      .exec();
 
     if (!post) throw new NotFoundException('Post não encontrado');
 
     return post;
   }
 
-  async editarPost(id: string, createPostInput: CreatePostInput) {
-    const post = await this.verPost(id);
+  async editarPost(
+    id: string,
+    createPostInput: CreatePostInput,
+    idUsuario: string,
+  ) {
+    const post = await this.visualizarPost(id);
 
-    Object.assign(post, createPostInput);
+    if (idUsuario !== post.usuario.id)
+      throw new BadRequestException('Você não pode excluir esse post');
 
-    return this.postRepository.save(post);
+    await this.postModel
+      .findOneAndUpdate({ id }, { $set: createPostInput })
+      .exec();
+
+    return this.visualizarPost(id);
   }
 
-  async excluirPost(id: string) {
-    await this.verPost(id);
+  async excluirPost(id: string, idUsuario: string) {
+    const post = await this.visualizarPost(id);
 
-    await this.postRepository.delete({
+    if (idUsuario !== post.usuario.id)
+      throw new BadRequestException('Você não pode excluir esse post');
+
+    await this.postModel.deleteOne({
       id,
     });
 
     return 'Post excluído com sucesso';
   }
 
-  async adicionarComentario(id: string, comentario: string) {
-    const post = await this.verPost(id);
-
-    if (post.comentarios)
-      post.comentarios.push({
-        id: uuid(),
-        texto: comentario,
-        likes: 0,
-      });
-    else post.comentarios = [{ id: uuid(), texto: comentario, likes: 0 }];
-
-    return this.postRepository.save(post);
-  }
-
-  async excluirComentario(id: string, idComentario: string) {
-    const post = await this.verPost(id);
-
-    const comentario = post.comentarios.find((c) => c.id === idComentario);
-
-    if (!comentario) throw new NotFoundException('Comentário não encontrado');
-
-    post.comentarios = post.comentarios.filter((c) => c.id !== idComentario);
-
-    return this.postRepository.save(post);
-  }
-
   async darLike(id: string) {
-    const post = await this.verPost(id);
+    const post = await this.visualizarPost(id);
 
     post.likes++;
 
-    return this.postRepository.save(post);
+    return post.save();
   }
 
   async removerLike(id: string) {
-    const post = await this.verPost(id);
+    const post = await this.visualizarPost(id);
 
     post.likes--;
 
-    return this.postRepository.save(post);
-  }
-
-  async darLikeComentario(id: string, idComentario: string) {
-    const post = await this.verPost(id);
-
-    const comentario = post.comentarios.find((c) => c.id === idComentario);
-
-    if (!comentario) throw new NotFoundException('Comentário não encontrado');
-
-    comentario.likes++;
-
-    return this.postRepository.save(post);
-  }
-
-  async removerLikeComentario(id: string, idComentario: string) {
-    const post = await this.verPost(id);
-
-    const comentario = post.comentarios.find((c) => c.id === idComentario);
-
-    if (!comentario) throw new NotFoundException('Comentário não encontrado');
-
-    comentario.likes--;
-
-    return this.postRepository.save(post);
+    return post.save();
   }
 }

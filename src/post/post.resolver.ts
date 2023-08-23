@@ -1,84 +1,66 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { GetUser } from 'src/shared/decorators/get-user.decorator';
+import { GqlAuthGuard } from 'src/shared/guards/gql-auth.guard';
+import { User } from 'src/user/schemas/user.schema';
 
 import { CreatePostInput } from './input/create-post.input';
-import { Post } from './model/post.entity';
 import { PostService } from './post.service';
+import { Post } from './schema/post.schema';
 
 @Resolver(() => Post)
 export class PostResolver {
   constructor(private readonly postService: PostService) {}
 
-  @Query(() => String)
-  sayHello() {
-    return 'Hello World!';
-  }
-
   @Query(() => [Post])
+  @UseGuards(GqlAuthGuard)
   async listarPosts(): Promise<Post[]> {
     return this.postService.listarPosts();
   }
 
   @Mutation(() => Post)
+  @UseGuards(GqlAuthGuard)
   async criarPost(
+    @GetUser() user: User,
     @Args('createPostInput') createPostInput: CreatePostInput,
   ): Promise<Post> {
-    return this.postService.criarPost(createPostInput);
+    return this.postService.criarPost(createPostInput, user);
   }
 
   @Query(() => Post)
+  @UseGuards(GqlAuthGuard)
   async verPost(@Args('id') id: string): Promise<Post> {
-    return this.postService.verPost(id);
+    return this.postService.visualizarPost(id);
   }
 
   @Mutation(() => Post)
+  @UseGuards(GqlAuthGuard)
   async editarPost(
     @Args('id') id: string,
     @Args('createPostInput') createPostInput: CreatePostInput,
+    @GetUser() user: User,
   ): Promise<Post> {
-    return this.postService.editarPost(id, createPostInput);
+    return this.postService.editarPost(id, createPostInput, user.id);
   }
 
   @Mutation(() => String)
-  async excluirPost(@Args('id') id: string): Promise<string> {
-    return this.postService.excluirPost(id);
-  }
-
-  @Mutation(() => Post)
-  async adicionarComentario(
+  @UseGuards(GqlAuthGuard)
+  async excluirPost(
     @Args('id') id: string,
-    @Args('comentario') comentario: string,
-  ): Promise<Post> {
-    return this.postService.adicionarComentario(id, comentario);
+    @GetUser() user: User,
+  ): Promise<string> {
+    return this.postService.excluirPost(id, user.id);
   }
 
   @Mutation(() => Post)
-  async excluirComentario(id: string, idComentario: string) {
-    return this.postService.excluirComentario(id, idComentario);
-  }
-
-  @Mutation(() => Post)
+  @UseGuards(GqlAuthGuard)
   async darLike(@Args('id') id: string): Promise<Post> {
     return this.postService.darLike(id);
   }
 
   @Mutation(() => Post)
+  @UseGuards(GqlAuthGuard)
   async removerLike(@Args('id') id: string): Promise<Post> {
     return this.postService.removerLike(id);
-  }
-
-  @Mutation(() => Post)
-  async darLikeComentario(
-    @Args('id') id: string,
-    @Args('idComentario') idComentario: string,
-  ): Promise<Post> {
-    return this.postService.darLikeComentario(id, idComentario);
-  }
-
-  @Mutation(() => Post)
-  async removerLikeComentario(
-    @Args('id') id: string,
-    @Args('idComentario') idComentario: string,
-  ): Promise<Post> {
-    return this.postService.removerLikeComentario(id, idComentario);
   }
 }
