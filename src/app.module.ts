@@ -5,9 +5,9 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { AuthModule } from './auth/auth.module';
+import { ComentarioModule } from './comentario/comentario.module';
 import { PostModule } from './post/post.module';
 import { UserModule } from './user/user.module';
-import { ComentarioModule } from './comentario/comentario.module';
 
 @Module({
   imports: [

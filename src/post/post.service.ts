@@ -10,10 +10,15 @@ import { v4 as uuid } from 'uuid';
 
 import { CreatePostInput } from './input/create-post.input';
 import { Post } from './schema/post.schema';
+import { Comentario } from 'src/comentario/schema/comentario.schema';
 
 @Injectable()
 export class PostService {
-  constructor(@InjectModel('Post') private readonly postModel: Model<Post>) {}
+  constructor(
+    @InjectModel('Post') private readonly postModel: Model<Post>,
+    @InjectModel('Comentario')
+    private readonly comentarioModel: Model<Comentario>,
+  ) {}
 
   async criarPost(createPostInput: CreatePostInput, user: User) {
     const { descricao, urlImagem } = createPostInput;
@@ -86,6 +91,13 @@ export class PostService {
 
     if (idUsuario !== post.usuario.id)
       throw new BadRequestException('Você não pode excluir esse post');
+
+    if (post.comentarios.length > 0)
+      for (const comentario of post.comentarios) {
+        await this.comentarioModel.deleteOne({
+          id: comentario.id,
+        });
+      }
 
     await this.postModel.deleteOne({
       id,

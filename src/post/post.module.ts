@@ -1,12 +1,16 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ComentarioModule } from 'src/comentario/comentario.module';
 
 import { PostResolver } from './post.resolver';
 import { PostService } from './post.service';
-import { MongooseModule } from '@nestjs/mongoose';
 import { PostSchema } from './schema/post.schema';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: 'Post', schema: PostSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: 'Post', schema: PostSchema }]),
+    forwardRef(() => ComentarioModule),
+  ],
   providers: [PostResolver, PostService],
   exports: [MongooseModule],
 })
