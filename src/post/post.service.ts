@@ -37,7 +37,20 @@ export class PostService {
   async listarPosts() {
     const posts = await this.postModel
       .find()
-      .populate(['usuario', 'comentarios'])
+      .populate([
+        {
+          path: 'usuario',
+          model: 'User',
+        },
+        {
+          path: 'comentarios',
+          model: 'Comentario',
+          populate: {
+            path: 'usuario',
+            model: 'User',
+          },
+        },
+      ])
       .exec();
 
     if (!posts) throw new NotFoundException('Nenhum post encontrado');
